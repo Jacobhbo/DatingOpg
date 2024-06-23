@@ -1,42 +1,9 @@
-﻿@page "/"
-@rendermode InteractiveServer
+﻿@page "/search"
 @using DatingOpg.Models
 @using DatingOpg.Services
-@using Microsoft.AspNetCore.Authorization
 @inject ProfileService ProfileService
 
-
-<div class="row">
-    <div class="col-12">
-        <h2 class="fw-bolder">Welcome to <span class="text-danger">Dating App</span></h2>
-    </div>
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <AuthorizeView>
-                    <NotAuthorized>
-                        <div>
-                            <span>You are not logged in. Please <a class="fw-bolder" href="/Accounts/Login">click here</a> to log in.</span>
-                        </div>
-                        <div class="mt-2">
-                            <span>You don't have an account? <a href="/accounts/create" class="fw-bolder">Click here</a> to create one.</span>
-                        </div>
-                    </NotAuthorized>
-                    <Authorized>
-                        <span>Logged in as <b>@context.User.Identity.Name</b>. <a class="fw-bolder" href="/Accounts/Logout">Click here</a> to logout.</span>
-                    </Authorized>
-                </AuthorizeView>
-            </div>
-        </div>
-    </div>
-</div>
-
-@if (notificationVisible)
-{
-    <div class="alert alert-success" role="alert">
-        @notificationMessage
-    </div>
-}
+<PageTitle>Search Profiles</PageTitle>
 
 <h3>Search Profiles</h3>
 
@@ -97,14 +64,6 @@
 @code {
     private SearchCriteria searchCriteria = new();
     private List<Profile> profiles;
-    private bool notificationVisible = false;
-    private string notificationMessage;
-
-    protected override void OnInitialized()
-    {
-        ProfileService.OnLikeReceived += HandleLikeReceived;
-        ProfileService.OnMatch += HandleMatch;
-    }
 
     private async Task PerformSearch()
     {
@@ -114,27 +73,5 @@
     private async Task LikeProfile(int profileId)
     {
         await ProfileService.LikeProfileAsync(profileId);
-    }
-
-    private void HandleLikeReceived()
-    {
-        ShowNotification("You received a like!");
-    }
-
-    private void HandleMatch()
-    {
-        ShowNotification("It's a match!");
-    }
-
-    private void ShowNotification(string message)
-    {
-        notificationMessage = message;
-        notificationVisible = true;
-        StateHasChanged();
-        Task.Delay(5000).ContinueWith(_ =>
-        {
-            notificationVisible = false;
-            StateHasChanged();
-        });
     }
 }
