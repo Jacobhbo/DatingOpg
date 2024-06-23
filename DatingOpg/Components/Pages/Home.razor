@@ -1,0 +1,22 @@
+﻿@page "/"
+
+<div class="row">
+    <div class="col-12">
+        <h2 class="fw-bolder">Welcome to <span class="text-danger">Dating App</span></h2>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <AuthorizeView>
+                    <NotAuthorized>
+                        <span>You are not logged in. Please <a class="fw-bolder" href="/Accounts/Create">click here</a> to log in.</span>
+                    </NotAuthorized>
+                    <Authorized>
+                        <span>Logged in as <b>@context.User.Identity.Name</b>. <a class="fw-bolder" href="/Accounts/Logout">Click here</a> to lougout.</span>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </div>
+</div>
+

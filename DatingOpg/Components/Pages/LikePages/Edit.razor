@@ -1,0 +1,96 @@
+﻿@page "/Likes/edit"
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Like</h4>
+<hr />
+@if (Like is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Like" OnValidSubmit="UpdateLike" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Like.LikeId" value="@Like.LikeId" />
+                <div class="mb-3">
+                    <label for="senderid" class="form-label">SenderId:</label>
+                    <InputNumber id="senderid" @bind-Value="Like.SenderId" class="form-control" />
+                    <ValidationMessage For="() => Like.SenderId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="receiverid" class="form-label">ReceiverId:</label>
+                    <InputNumber id="receiverid" @bind-Value="Like.ReceiverId" class="form-control" />
+                    <ValidationMessage For="() => Like.ReceiverId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="status" class="form-label">status:</label>
+                    <InputNumber id="status" @bind-Value="Like.status" class="form-control" />
+                    <ValidationMessage For="() => Like.status" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/likes">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int LikeId { get; set; }
+
+    [SupplyParameterFromForm]
+    public Like? Like { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Like ??= await DB.Likes.FirstOrDefaultAsync(m => m.LikeId == LikeId);
+
+        if (Like is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateLike()
+    {
+        DB.Attach(Like!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!LikeExists(Like!.LikeId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/likes");
+    }
+
+    bool LikeExists(int likeid)
+    {
+        return DB.Likes.Any(e => e.LikeId == likeid);
+    }
+}

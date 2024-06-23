@@ -1,0 +1,49 @@
+﻿@page "/likes/details"
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>Like</h4>
+    <hr />
+    @if (like is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">SenderId</dt>
+            <dd class="col-sm-10">@like.SenderId</dd>
+            <dt class="col-sm-2">ReceiverId</dt>
+            <dd class="col-sm-10">@like.ReceiverId</dd>
+            <dt class="col-sm-2">status</dt>
+            <dd class="col-sm-10">@like.status</dd>
+        </dl>
+        <div>
+            <a href="@($"/likes/edit?likeid={like.LikeId}")">Edit</a> |
+            <a href="@($"/likes")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    Like? like;
+
+    [SupplyParameterFromQuery]
+    public int LikeId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        like = await DB.Likes.FirstOrDefaultAsync(m => m.LikeId == LikeId);
+
+        if (like is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

@@ -1,0 +1,73 @@
+﻿@page "/profiles/delete"
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>Profile</h4>
+    <hr />
+    @if (profile is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Height</dt>
+            <dd class="col-sm-10">@profile.Height</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Weight</dt>
+            <dd class="col-sm-10">@profile.Weight</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">BirthDate</dt>
+            <dd class="col-sm-10">@profile.BirthDate</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">NickName</dt>
+            <dd class="col-sm-10">@profile.NickName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Gender</dt>
+            <dd class="col-sm-10">@profile.Gender</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">AccountId</dt>
+            <dd class="col-sm-10">@profile.AccountId</dd>
+        </dl>
+        <EditForm method="post" Model="profile" OnValidSubmit="DeleteProfile" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(profile is null)">Delete</button> |
+            <a href="/profiles">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    Profile? profile;
+
+    [SupplyParameterFromQuery]
+    public int ProfileId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        profile = await DB.Profiles.FirstOrDefaultAsync(m => m.ProfileId == ProfileId);
+
+        if (profile is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    public async Task DeleteProfile()
+    {
+        DB.Profiles.Remove(profile!);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo("/profiles");
+    }
+}

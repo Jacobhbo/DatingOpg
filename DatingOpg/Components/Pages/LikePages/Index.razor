@@ -1,0 +1,24 @@
+﻿@page "/likes"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="likes/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="DB.Likes">
+    <PropertyColumn Property="like => like.SenderId" />
+    <PropertyColumn Property="like => like.ReceiverId" />
+    <PropertyColumn Property="like => like.status" />
+
+    <TemplateColumn Context="like">
+        <a href="@($"likes/edit?likeid={like.LikeId}")">Edit</a> |
+        <a href="@($"likes/details?likeid={like.LikeId}")">Details</a> |
+        <a href="@($"likes/delete?likeid={like.LikeId}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>

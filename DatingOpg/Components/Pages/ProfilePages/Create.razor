@@ -1,0 +1,69 @@
+﻿@page "/profiles/create"
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Profile</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Profile" OnValidSubmit="AddProfile" FormName="create" Enhance>
+             <Antiforgery />
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="height" class="form-label">Height:</label> 
+                <InputNumber id="height" @bind-Value="Profile.Height" class="form-control" /> 
+                <ValidationMessage For="() => Profile.Height" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="weight" class="form-label">Weight:</label> 
+                <InputNumber id="weight" @bind-Value="Profile.Weight" class="form-control" /> 
+                <ValidationMessage For="() => Profile.Weight" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="birthdate" class="form-label">BirthDate:</label> 
+                <InputDate id="birthdate" @bind-Value="Profile.BirthDate" class="form-control" /> 
+                <ValidationMessage For="() => Profile.BirthDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="nickname" class="form-label">NickName:</label> 
+                <InputText id="nickname" @bind-Value="Profile.NickName" class="form-control" /> 
+                <ValidationMessage For="() => Profile.NickName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="gender" class="form-label">Gender:</label> 
+                <InputText id="gender" @bind-Value="Profile.Gender" class="form-control" /> 
+                <ValidationMessage For="() => Profile.Gender" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="accountid" class="form-label">AccountId:</label> 
+                <InputNumber id="accountid" @bind-Value="Profile.AccountId" class="form-control" /> 
+                <ValidationMessage For="() => Profile.AccountId" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/profiles">Back to List</a>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public Profile Profile { get; set; } = new();
+
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public async Task AddProfile()
+    {
+        DB.Profiles.Add(Profile);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo("/profiles");
+    }
+}

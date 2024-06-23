@@ -1,0 +1,116 @@
+﻿@page "/Accounts/edit"
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Account</h4>
+<hr />
+@if (Account is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Account" OnValidSubmit="UpdateAccount" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Account.AccountId" value="@Account.AccountId" />
+                <div class="mb-3">
+                    <label for="firstname" class="form-label">FirstName:</label>
+                    <InputText id="firstname" @bind-Value="Account.FirstName" class="form-control" />
+                    <ValidationMessage For="() => Account.FirstName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="lastname" class="form-label">LastName:</label>
+                    <InputText id="lastname" @bind-Value="Account.LastName" class="form-control" />
+                    <ValidationMessage For="() => Account.LastName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email:</label>
+                    <InputText id="email" @bind-Value="Account.Email" class="form-control" />
+                    <ValidationMessage For="() => Account.Email" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="username" class="form-label">UserName:</label>
+                    <InputText id="username" @bind-Value="Account.UserName" class="form-control" />
+                    <ValidationMessage For="() => Account.UserName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <InputText id="password" @bind-Value="Account.Password" class="form-control" />
+                    <ValidationMessage For="() => Account.Password" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="createddate" class="form-label">CreatedDate:</label>
+                    <InputDate id="createddate" @bind-Value="Account.CreatedDate" class="form-control" />
+                    <ValidationMessage For="() => Account.CreatedDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role:</label>
+                    <InputText id="role" @bind-Value="Account.Role" class="form-control" />
+                    <ValidationMessage For="() => Account.Role" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/accounts">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int AccountId { get; set; }
+
+    [SupplyParameterFromForm]
+    public Account? Account { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Account ??= await DB.Accounts.FirstOrDefaultAsync(m => m.AccountId == AccountId);
+
+        if (Account is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateAccount()
+    {
+        DB.Attach(Account!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!AccountExists(Account!.AccountId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/accounts");
+    }
+
+    bool AccountExists(int accountid)
+    {
+        return DB.Accounts.Any(e => e.AccountId == accountid);
+    }
+}

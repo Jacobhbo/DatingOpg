@@ -1,0 +1,55 @@
+﻿@page "/profiles/details"
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>Profile</h4>
+    <hr />
+    @if (profile is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Height</dt>
+            <dd class="col-sm-10">@profile.Height</dd>
+            <dt class="col-sm-2">Weight</dt>
+            <dd class="col-sm-10">@profile.Weight</dd>
+            <dt class="col-sm-2">BirthDate</dt>
+            <dd class="col-sm-10">@profile.BirthDate</dd>
+            <dt class="col-sm-2">NickName</dt>
+            <dd class="col-sm-10">@profile.NickName</dd>
+            <dt class="col-sm-2">Gender</dt>
+            <dd class="col-sm-10">@profile.Gender</dd>
+            <dt class="col-sm-2">AccountId</dt>
+            <dd class="col-sm-10">@profile.AccountId</dd>
+        </dl>
+        <div>
+            <a href="@($"/profiles/edit?profileid={profile.ProfileId}")">Edit</a> |
+            <a href="@($"/profiles")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    Profile? profile;
+
+    [SupplyParameterFromQuery]
+    public int ProfileId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        profile = await DB.Profiles.FirstOrDefaultAsync(m => m.ProfileId == ProfileId);
+
+        if (profile is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

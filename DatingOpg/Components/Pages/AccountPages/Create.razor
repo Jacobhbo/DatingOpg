@@ -1,0 +1,73 @@
+﻿@page "/accounts/create"
+@inject DatingOpg.Data.DtingContext DB
+@using DatingOpg.Models
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Account</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Account" OnValidSubmit="AddAccount" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="firstname" class="form-label">FirstName:</label> 
+                <InputText id="firstname" @bind-Value="Account.FirstName" class="form-control" /> 
+                <ValidationMessage For="() => Account.FirstName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="lastname" class="form-label">LastName:</label> 
+                <InputText id="lastname" @bind-Value="Account.LastName" class="form-control" /> 
+                <ValidationMessage For="() => Account.LastName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label> 
+                <InputText id="email" @bind-Value="Account.Email" class="form-control" /> 
+                <ValidationMessage For="() => Account.Email" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="username" class="form-label">UserName:</label> 
+                <InputText id="username" @bind-Value="Account.UserName" class="form-control" /> 
+                <ValidationMessage For="() => Account.UserName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label> 
+                <InputText id="password" @bind-Value="Account.Password" class="form-control" /> 
+                <ValidationMessage For="() => Account.Password" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="createddate" class="form-label">CreatedDate:</label> 
+                <InputDate id="createddate" @bind-Value="Account.CreatedDate" class="form-control" /> 
+                <ValidationMessage For="() => Account.CreatedDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="role" class="form-label">Role:</label> 
+                <InputText id="role" @bind-Value="Account.Role" class="form-control" /> 
+                <ValidationMessage For="() => Account.Role" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/accounts">Back to List</a>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public Account Account { get; set; } = new();
+
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public async Task AddAccount()
+    {
+        DB.Accounts.Add(Account);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo("/accounts");
+    }
+}
