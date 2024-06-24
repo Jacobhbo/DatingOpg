@@ -27,6 +27,7 @@
                         <div>
                             @if (loggedInProfile == null || loggedInProfile.ProfileId != profile.ProfileId)
                             {
+                                <button class="btn btn-success" @onclick="() => LikeProfile(profile.ProfileId)">Like</button>
                                 <button class="btn btn-primary" @onclick="() => LoginProfile(profile.ProfileId)">Login</button>
                                 <button class="btn btn-secondary" @onclick="() => SelectProfile(profile.ProfileId)">Select</button>
                             }
@@ -47,14 +48,22 @@
         {
             <p>Logged in as: @loggedInProfile.NickName</p>
             <p>Select a profile to chat with ;)</p>
+            <p>Press "Like" to ask for a match!</p>
+            @if (showLikePrompt)
+            {
+                <p>Press "Like" on another profile to match.</p>
+            }
         }
+        <div class="text-end">
+            <p>Select = Chat</p>
+        </div>
     </div>
     <div class="col-lg-8 pt-4 pb-4 border">
         <EditForm Model="@searchModel" OnValidSubmit="PerformSearch" FormName="SearchForm">
             <Antiforgery />
             <DataAnnotationsValidator />
             <div class="mb-3">
-                <label>Search</label>
+                <label>Search for Profiles</label>
                 <InputText @bind-Value="searchModel.SearchTerm" class="form-control" placeholder="Enter search term" />
                 <ValidationMessage For="() => searchModel.SearchTerm" />
             </div>
@@ -72,10 +81,10 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             @profile.NickName
                             <div>
-                                <button class="btn btn-success" @onclick="() => LikeProfile(profile.ProfileId)">Like</button>
                                 @if (loggedInProfile != null && loggedInProfile.ProfileId != profile.ProfileId)
                                 {
                                     <a class="btn btn-primary" href="@($"/chat/{loggedInProfile.ProfileId}/{profile.ProfileId}")">Chat</a>
+                                    <button class="btn btn-success" @onclick="() => LikeProfile(profile.ProfileId)">Like</button>
                                 }
                                 else if (loggedInProfile != null && loggedInProfile.ProfileId == profile.ProfileId)
                                 {
@@ -112,6 +121,12 @@
                                     <button class="btn btn-primary" @onclick="() => SelectProfile(profile.ProfileId)">Select</button>
                                 }
                             </div>
+                            <div>
+                                @if (IsMutualLike(profile.ProfileId).Result)
+                                {
+                                    <p>We got a match!</p>
+                                }
+                            </div>
                         </li>
                     }
                 </ul>
@@ -124,6 +139,13 @@
     </div>
 </div>
 
+@if (showLikeMessage)
+{
+    <div class="alert alert-success" role="alert">
+        The profile has been liked!
+    </div>
+}
+
 @code {
     private SearchViewModel searchModel = new();
     private List<Profile> profiles;
@@ -132,6 +154,8 @@
     private Profile loggedInProfile;
     private int? selectedProfile1;
     private int? selectedProfile2;
+    private bool showLikeMessage = false;
+    private bool showLikePrompt = false;
 
     private async Task PerformSearch()
     {
@@ -154,6 +178,17 @@
             };
 
             await LikeService.AddLikeAsync(like);
+
+            // Refresh mutual likes
+            mutualLikes = await ProfileService.GetMutualLikesAsync(int.Parse(accountIdClaim.Value));
+
+            // Show like message
+            showLikeMessage = true;
+            showLikePrompt = true;
+
+            // Hide the message after a few seconds
+            await Task.Delay(3000);
+            showLikeMessage = false;
         }
     }
 
@@ -193,6 +228,7 @@
 
         if (accountIdClaim != null)
         {
+            loggedInProfile = await ProfileService.GetProfileByAccountIdAsync(int.Parse(accountIdClaim.Value));
             mutualLikes = await ProfileService.GetMutualLikesAsync(int.Parse(accountIdClaim.Value));
         }
 
@@ -203,5 +239,10 @@
     {
         [Required]
         public string SearchTerm { get; set; }
+    }
+
+    private async Task<bool> IsMutualLike(int profileId)
+    {
+        return await LikeService.CheckForMutualLikeAsync(loggedInProfile.ProfileId, profileId);
     }
 }

@@ -12,8 +12,8 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <EditForm method="post" Model="Profile" OnValidSubmit="AddProfile" FormName="create" Enhance>
-             <Antiforgery />
+        <EditForm Model="Profile" OnValidSubmit="AddProfile">
+            <Antiforgery />
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
             <div class="mb-3">
@@ -56,7 +56,6 @@
 </div>
 
 @code {
-
     [SupplyParameterFromForm]
     public Profile Profile { get; set; } = new();
 

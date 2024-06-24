@@ -37,5 +37,13 @@ namespace DatingOpg.Services
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<bool> CheckForMutualLikeAsync(int senderId, int receiverId)
+        {
+            var mutualLike = await _context.Likes
+                .FirstOrDefaultAsync(l => l.SenderId == receiverId && l.ReceiverId == senderId && l.status == 1);
+
+            return mutualLike != null;
+        }
     }
 }

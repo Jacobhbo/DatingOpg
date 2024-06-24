@@ -47,7 +47,10 @@
             </div>        
             <div class="mb-3">
                 <label for="role" class="form-label">Role:</label> 
-                <InputText id="role" @bind-Value="Account.Role" class="form-control" /> 
+                <InputSelect id="role" @bind-Value="Account.Role" class="form-control">
+                    <option value="User">User</option>
+                    <option value="Administrator">Administrator</option>
+                </InputSelect>
                 <ValidationMessage For="() => Account.Role" class="text-danger" /> 
             </div>        
             <button type="submit" class="btn btn-primary">Create</button>
