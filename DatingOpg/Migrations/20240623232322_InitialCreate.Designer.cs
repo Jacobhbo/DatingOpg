@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DatingOpg.Migrations
 {
     [DbContext(typeof(DtingContext))]
-    [Migration("20240623184925_initialcreate")]
-    partial class initialcreate
+    [Migration("20240623232322_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -173,6 +173,12 @@ namespace DatingOpg.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("DatingOpg.Models.Profile", "ReceiverProfile")
+                        .WithMany("ReceivedChats")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("DatingOpg.Models.Account", "Sender")
                         .WithMany("SentChats")
                         .HasForeignKey("SenderId")
@@ -180,6 +186,8 @@ namespace DatingOpg.Migrations
                         .IsRequired();
 
                     b.Navigation("Receiver");
+
+                    b.Navigation("ReceiverProfile");
 
                     b.Navigation("Sender");
                 });
@@ -226,6 +234,8 @@ namespace DatingOpg.Migrations
 
             modelBuilder.Entity("DatingOpg.Models.Profile", b =>
                 {
+                    b.Navigation("ReceivedChats");
+
                     b.Navigation("ReceivedLikes");
                 });
 #pragma warning restore 612, 618

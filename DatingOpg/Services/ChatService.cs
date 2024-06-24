@@ -1,45 +1,33 @@
-﻿using DatingOpg.Data;
-using DatingOpg.Models;
-using DatingOpg.Services;
+using DatingOpg.Data;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using DatingOpg.Models;
 
-public class ChatService
+namespace DatingOpg.Services
 {
-    private readonly DtingContext _context;
-    private readonly AuthHelperService _authHelperService;
-
-    public ChatService(DtingContext context, AuthHelperService authHelperService)
+    public class ChatService
     {
-        _context = context;
-        _authHelperService = authHelperService;
-    }
+        private readonly DtingContext _context;
 
-    public async Task SendMessageAsync(int receiverId, string message)
-    {
-        var account = await _authHelperService.GetAuthenticatedAccountAsync();
-        if (account == null) return;
-
-        var chat = new Chat
+        public ChatService(DtingContext context)
         {
-            SenderId = account.AccountId,
-            ReceiverId = receiverId,
-            Message = message,
-            Status = 1
-        };
+            _context = context;
+        }
 
-        _context.Chats.Add(chat);
-        await _context.SaveChangesAsync();
-    }
+        public async Task<List<Chat>> GetChatMessagesAsync(int senderId, int receiverId)
+        {
+            return await _context.Chats
+                .Where(c => (c.SenderId == senderId && c.ReceiverId == receiverId) ||
+                            (c.SenderId == receiverId && c.ReceiverId == senderId))
+                .OrderBy(c => c.ChatId)
+                .ToListAsync();
+        }
 
-    public async Task<List<Chat>> GetMessagesAsync(int receiverId)
-    {
-        var account = await _authHelperService.GetAuthenticatedAccountAsync();
-        if (account == null) return new List<Chat>();
-
-        return await _context.Chats
-            .Where(c => (c.SenderId == account.AccountId && c.ReceiverId == receiverId) ||
-                        (c.ReceiverId == account.AccountId && c.SenderId == receiverId))
-            .OrderBy(c => c.ChatId)
-            .ToListAsync();
+        public async Task AddChatMessageAsync(Chat chat)
+        {
+            _context.Chats.Add(chat);
+            await _context.SaveChangesAsync();
+        }
     }
 }

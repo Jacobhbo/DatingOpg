@@ -20,5 +20,9 @@ namespace DatingOpg.Models
         public string Message { get; set; }
 
         public int Status { get; set; }
+
+        // Add this property to establish the relationship with Profile
+        [ForeignKey("ReceiverId")]
+        public Profile ReceiverProfile { get; set; }
     }
 }

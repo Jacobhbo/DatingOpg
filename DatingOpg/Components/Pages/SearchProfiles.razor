@@ -1,0 +1,207 @@
+@page "/Accounts/SearchProfiles"
+
+@using DatingOpg.Data
+@using DatingOpg.Models
+@using DatingOpg.Services
+@using Microsoft.Build.Framework
+@inject DtingContext DbContext
+@inject ProfileService ProfileService
+@inject LikeService LikeService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Search Profiles</PageTitle>
+
+<div class="row">
+    <div class="col-lg-4 pt-4 pb-4 border">
+        <h3>All Profiles</h3>
+        <p><a href="/profiles/create">Create a new profile here!</a></p>
+        <ul class="list-group">
+            @if (allProfiles != null)
+            {
+                @foreach (var profile in allProfiles)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        @profile.NickName
+                        <div>
+                            @if (loggedInProfile == null || loggedInProfile.ProfileId != profile.ProfileId)
+                            {
+                                <button class="btn btn-primary" @onclick="() => LoginProfile(profile.ProfileId)">Login</button>
+                                <button class="btn btn-secondary" @onclick="() => SelectProfile(profile.ProfileId)">Select</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary" @onclick="LogoutProfile">Logout</button>
+                            }
+                        </div>
+                    </li>
+                }
+            }
+            else
+            {
+                <p>Loading profiles...</p>
+            }
+        </ul>
+        @if (loggedInProfile != null)
+        {
+            <p>Logged in as: @loggedInProfile.NickName</p>
+            <p>Select a profile to chat with ;)</p>
+        }
+    </div>
+    <div class="col-lg-8 pt-4 pb-4 border">
+        <EditForm Model="@searchModel" OnValidSubmit="PerformSearch" FormName="SearchForm">
+            <Antiforgery />
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label>Search</label>
+                <InputText @bind-Value="searchModel.SearchTerm" class="form-control" placeholder="Enter search term" />
+                <ValidationMessage For="() => searchModel.SearchTerm" />
+            </div>
+            <div class="mb-3 d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </EditForm>
+
+        <div class="mt-4">
+            @if (profiles != null && profiles.Any())
+            {
+                <ul class="list-group">
+                    @foreach (var profile in profiles)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            @profile.NickName
+                            <div>
+                                <button class="btn btn-success" @onclick="() => LikeProfile(profile.ProfileId)">Like</button>
+                                @if (loggedInProfile != null && loggedInProfile.ProfileId != profile.ProfileId)
+                                {
+                                    <a class="btn btn-primary" href="@($"/chat/{loggedInProfile.ProfileId}/{profile.ProfileId}")">Chat</a>
+                                }
+                                else if (loggedInProfile != null && loggedInProfile.ProfileId == profile.ProfileId)
+                                {
+                                    <button class="btn btn-primary" @onclick="() => SelectProfile(profile.ProfileId)">Select</button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else if (profiles != null)
+            {
+                <p>No profiles found.</p>
+            }
+        </div>
+
+        <div class="mt-4">
+            <h3>Mutual Likes</h3>
+            @if (mutualLikes != null && mutualLikes.Any())
+            {
+                <ul class="list-group">
+                    @foreach (var profile in mutualLikes)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            @profile.NickName
+                            <div>
+                                @if (loggedInProfile != null && loggedInProfile.ProfileId != profile.ProfileId)
+                                {
+                                    <a class="btn btn-primary" href="@($"/chat/{loggedInProfile.ProfileId}/{profile.ProfileId}")">Chat</a>
+                                    <button class="btn btn-secondary" @onclick="() => SelectProfile(profile.ProfileId)">Select</button>
+                                }
+                                else if (loggedInProfile != null && loggedInProfile.ProfileId == profile.ProfileId)
+                                {
+                                    <button class="btn btn-primary" @onclick="() => SelectProfile(profile.ProfileId)">Select</button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>No mutual likes found.</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private SearchViewModel searchModel = new();
+    private List<Profile> profiles;
+    private List<Profile> mutualLikes;
+    private List<Profile> allProfiles;
+    private Profile loggedInProfile;
+    private int? selectedProfile1;
+    private int? selectedProfile2;
+
+    private async Task PerformSearch()
+    {
+        profiles = await ProfileService.SearchProfilesAsync(searchModel.SearchTerm);
+    }
+
+    private async Task LikeProfile(int profileId)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var accountIdClaim = user.FindFirst(c => c.Type == "AccountId");
+
+        if (accountIdClaim != null)
+        {
+            var like = new Like
+            {
+                SenderId = int.Parse(accountIdClaim.Value),
+                ReceiverId = profileId,
+                status = 1 // Assuming 1 means "liked"
+            };
+
+            await LikeService.AddLikeAsync(like);
+        }
+    }
+
+    private async Task LoginProfile(int profileId)
+    {
+        loggedInProfile = await ProfileService.GetProfileByIdAsync(profileId);
+    }
+
+    private void LogoutProfile()
+    {
+        loggedInProfile = null;
+    }
+
+    private void SelectProfile(int profileId)
+    {
+        if (selectedProfile1 == null)
+        {
+            selectedProfile1 = profileId;
+        }
+        else if (selectedProfile2 == null)
+        {
+            selectedProfile2 = profileId;
+            NavigationManager.NavigateTo($"/chat/{selectedProfile1}/{selectedProfile2}");
+        }
+        else
+        {
+            selectedProfile1 = profileId;
+            selectedProfile2 = null;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var accountIdClaim = user.FindFirst(c => c.Type == "AccountId");
+
+        if (accountIdClaim != null)
+        {
+            mutualLikes = await ProfileService.GetMutualLikesAsync(int.Parse(accountIdClaim.Value));
+        }
+
+        allProfiles = await ProfileService.GetAllProfilesAsync();
+    }
+
+    public class SearchViewModel
+    {
+        [Required]
+        public string SearchTerm { get; set; }
+    }
+}

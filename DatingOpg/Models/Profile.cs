@@ -23,5 +23,8 @@ namespace DatingOpg.Models
         public Account Account { get; set; }
 
         public ICollection<Like> ReceivedLikes { get; set; }
+
+        // Add this property to include received chats
+        public ICollection<Chat> ReceivedChats { get; set; }
     }
 }

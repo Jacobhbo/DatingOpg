@@ -45,6 +45,12 @@ namespace DatingOpg.Data
                 .WithMany()
                 .HasForeignKey(c => c.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+                
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.ReceiverProfile)
+                .WithMany(p => p.ReceivedChats)
+                .HasForeignKey(c => c.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

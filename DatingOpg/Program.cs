@@ -23,7 +23,10 @@ namespace DatingOpg
             builder.Services.AddScoped<AuthHelperService>();
             builder.Services.AddScoped<AccountService>();
             builder.Services.AddScoped<ProfileService>();
-            builder.Services.AddScoped<DbContext>();
+            builder.Services.AddScoped<DtingContext>();
+            builder.Services.AddHttpContextAccessor(); // Added this line to register IHttpContextAccessor
+            builder.Services.AddScoped<LikeService>(); // Added this line to register LikeService
+            builder.Services.AddScoped<ChatService>(); // Added this line to register ChatService
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
@@ -34,7 +37,7 @@ namespace DatingOpg
                     options.Cookie.Name = "auth_token";
                     options.LoginPath = "/Accounts/Login";
                     options.Cookie.MaxAge = TimeSpan.FromMinutes(30);
-                    options.AccessDeniedPath = "/access-denied";
+                    options.AccessDeniedPath = "/Accounts/AccessDenied";
                 });
             builder.Services.AddAuthorization();
             builder.Services.AddCascadingAuthenticationState();

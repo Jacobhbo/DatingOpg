@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DatingOpg.Services
 {
@@ -26,88 +28,55 @@ namespace DatingOpg.Services
             return await _context.Profiles.FirstOrDefaultAsync(p => p.AccountId == accountId);
         }
 
-
-        public async Task<List<Profile>> SearchProfilesAsync(SearchCriteria criteria)
+        public async Task<Profile> GetProfileByIdAsync(int profileId)
         {
-            var query = _context.Profiles.AsQueryable();
-
-            if (!string.IsNullOrEmpty(criteria.NickName))
-            {
-                query = query.Where(p => p.NickName.Contains(criteria.NickName));
-            }
-            if (!string.IsNullOrEmpty(criteria.Gender))
-            {
-                query = query.Where(p => p.Gender == criteria.Gender);
-            }
-            if (criteria.MinAge.HasValue)
-            {
-                var minBirthDate = DateTime.Now.AddYears(-criteria.MinAge.Value);
-                query = query.Where(p => p.BirthDate <= minBirthDate);
-            }
-            if (criteria.MaxAge.HasValue)
-            {
-                var maxBirthDate = DateTime.Now.AddYears(-criteria.MaxAge.Value);
-                query = query.Where(p => p.BirthDate >= maxBirthDate);
-            }
-
-            return await query.ToListAsync();
+            return await _context.Profiles.FirstOrDefaultAsync(p => p.ProfileId == profileId);
         }
 
-        public async Task LikeProfileAsync(int profileId)
+        public async Task<List<Profile>> SearchProfilesAsync(string searchTerm)
         {
-            var account = await _authHelperService.GetAuthenticatedAccountAsync();
-            if (account == null) return;
-
-            var like = new Like
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                SenderId = account.AccountId,
-                ReceiverId = profileId,
-                status = 1
-            };
-
-            _context.Likes.Add(like);
-            await _context.SaveChangesAsync();
-
-            OnLikeReceived?.Invoke();
-
-            var receiverLikesSender = await _context.Likes.AnyAsync(l => l.SenderId == profileId && l.ReceiverId == account.Profile.ProfileId && l.status == 1);
-            if (receiverLikesSender)
-            {
-                OnMatch?.Invoke();
+                return new List<Profile>();
             }
-        }
 
-        public async Task<List<Like>> GetLikesReceivedAsync()
-        {
-            var account = await _authHelperService.GetAuthenticatedAccountAsync();
-            if (account == null) return new List<Like>();
-
-            return await _context.Likes
-                .Include(l => l.Sender)
-                .Where(l => l.ReceiverId == account.Profile.ProfileId)
+            return await _context.Profiles
+                .Where(p => p.NickName.Contains(searchTerm))
                 .ToListAsync();
         }
 
-        public async Task<List<Like>> GetMatchesAsync()
+        public List<Profile> SearchProfiles(string searchTerm)
         {
-            var account = await _authHelperService.GetAuthenticatedAccountAsync();
-            if (account == null) return new List<Like>();
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return new List<Profile>();
+            }
 
-            var receivedLikes = await _context.Likes
-                .Include(l => l.Sender)
-                .Where(l => l.ReceiverId == account.Profile.ProfileId && l.status == 1)
-                .ToListAsync();
-
-            var sentLikes = await _context.Likes
-                .Include(l => l.Receiver)
-                .Where(l => l.SenderId == account.Profile.ProfileId && l.status == 1)
-                .ToListAsync();
-
-            var matches = receivedLikes
-                .Where(received => sentLikes.Any(sent => sent.ReceiverId == received.Sender.Profile.ProfileId))
+            return _context.Profiles
+                .Where(p => p.NickName.Contains(searchTerm))
                 .ToList();
+        }
 
-            return matches;
+        public async Task<List<Profile>> GetMutualLikesAsync(int accountId)
+        {
+            var likedProfiles = await _context.Likes
+                .Where(l => l.SenderId == accountId && l.status == 1)
+                .Select(l => l.ReceiverId)
+                .ToListAsync();
+
+            var mutualLikes = await _context.Likes
+                .Where(l => likedProfiles.Contains(l.SenderId) && l.ReceiverId == accountId && l.status == 1)
+                .Select(l => l.SenderId)
+                .ToListAsync();
+
+            return await _context.Profiles
+                .Where(p => mutualLikes.Contains(p.AccountId))
+                .ToListAsync();
+        }
+
+        public async Task<List<Profile>> GetAllProfilesAsync()
+        {
+            return await _context.Profiles.ToListAsync();
         }
     }
 }
