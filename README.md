@@ -1,2 +1,2 @@
-Kunne ikke få messages til at virke :/
+Kunne ikke få chat og likes til at virke :/
 Prøvede mit bedste
